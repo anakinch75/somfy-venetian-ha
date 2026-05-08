@@ -21,7 +21,7 @@ Intégration Home Assistant pour les stores à lamelles Somfy via TaHoma Switch,
 ## Installation via HACS
 
 1. Dans HACS → **Intégrations** → menu ⋮ → **Dépôts personnalisés**
-2. URL : `https://github.com/anakinch75/omfy-venetian-ha`
+2. URL : `https://github.com/anakinch75/somfy-venetian-ha`
 3. Catégorie : **Intégration**
 4. Cliquez **Ajouter**
 5. Recherchez "Somfy Venetian" et installez
