@@ -106,6 +106,9 @@ automation:
 
 ## Changelog
 
+### v1.0.6
+- Correction définitive de l'effet de recalage en fin de mouvement : le slider affiche la valeur cible pendant tout le déplacement, et bascule sur la valeur réelle uniquement une fois le store arrêté
+
 ### v1.0.5
 - Correction commandes combinées position+inclinaison : les valeurs en attente sont mémorisées pour éviter les conflits entre commandes rapprochées
 

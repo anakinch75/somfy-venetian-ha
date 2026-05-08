@@ -79,8 +79,9 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
         self._pending_tilt: int | None = None
 
     def _handle_coordinator_update(self) -> None:
-        self._pending_position = None
-        self._pending_tilt = None
+        if str(self._get_state(STATE_MOVING)).lower() != "true":
+            self._pending_position = None
+            self._pending_tilt = None
         super()._handle_coordinator_update()
 
     def _get_state(self, name: str):
@@ -105,11 +106,15 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
 
     @property
     def current_cover_position(self) -> int | None:
+        if self._pending_position is not None:
+            return self._pending_position
         closure = self._get_state(STATE_CLOSURE)
         return None if closure is None else _somfy_closure_to_ha(closure)
 
     @property
     def current_cover_tilt_position(self) -> int | None:
+        if self._pending_tilt is not None:
+            return self._pending_tilt
         orientation = self._get_state(STATE_ORIENTATION)
         return None if orientation is None else _somfy_tilt_to_ha(orientation)
 
