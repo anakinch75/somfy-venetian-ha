@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connexion Somfy",
+        "data": {
+          "username": "Email",
+          "password": "Mot de passe",
+          "server": "Serveur"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossible de se connecter. Vérifiez vos identifiants."
+    }
+  }
+}
