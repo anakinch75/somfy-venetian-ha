@@ -17,8 +17,6 @@ from .const import (
     CMD_SET_CLOSURE_AND_ORIENTATION,
     CMD_STOP,
     DOMAIN,
-    SOMFY_TILT_MAX,
-    SOMFY_TILT_MIN,
     STATE_CLOSURE,
     STATE_MOVING,
     STATE_ORIENTATION,
@@ -49,14 +47,13 @@ def _ha_position_to_somfy(position: int) -> int:
 
 
 def _somfy_tilt_to_ha(orientation: int) -> int:
-    """Somfy -90→0 → HA 0→100"""
-    clamped = max(SOMFY_TILT_MIN, min(SOMFY_TILT_MAX, int(orientation)))
-    return round((clamped - SOMFY_TILT_MIN) / (SOMFY_TILT_MAX - SOMFY_TILT_MIN) * 100)
+    """Somfy 0=ouvert→100=fermé → HA 100=ouvert→0=fermé"""
+    return 100 - int(orientation)
 
 
 def _ha_tilt_to_somfy(tilt: int) -> int:
-    """HA 0→100 → Somfy -90→0"""
-    return round(SOMFY_TILT_MIN + (tilt / 100) * (SOMFY_TILT_MAX - SOMFY_TILT_MIN))
+    """HA 100=ouvert→0=fermé → Somfy 0=ouvert→100=fermé"""
+    return 100 - int(tilt)
 
 
 class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntity):

@@ -19,8 +19,7 @@ CMD_CLOSE = "close"
 CMD_STOP = "stop"
 CMD_MY = "my"
 
-# Tilt bounds (Somfy uses -90 to 0)
-SOMFY_TILT_MIN = -90
-SOMFY_TILT_MAX = 0
+# Somfy SlateOrientationState: 0=horizontal (ouvert), 100=vertical (fermé)
+# Commande setClosureAndOrientation p2: entier 0-100
 
 SCAN_INTERVAL_SECONDS = 30
