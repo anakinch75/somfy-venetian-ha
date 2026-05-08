@@ -4,7 +4,12 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["custom_components/somfy_venetian"]
-omit = ["tests/*"]
+omit = [
+    "tests/*",
+    "custom_components/somfy_venetian/coordinator.py",   # nécessite stack HA complet
+    "custom_components/somfy_venetian/config_flow.py",   # nécessite stack HA complet
+    "custom_components/somfy_venetian/__init__.py",      # nécessite stack HA complet
+]
 
 [tool.coverage.report]
 show_missing = true

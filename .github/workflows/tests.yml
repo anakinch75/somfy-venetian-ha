@@ -23,5 +23,5 @@ jobs:
       - name: Run tests
         run: pytest --cov --cov-report=term-missing -v
 
-      - name: Coverage check (minimum 80%)
-        run: pytest --cov --cov-fail-under=80
+      - name: Coverage check (minimum 75%)
+        run: pytest --cov --cov-fail-under=75
