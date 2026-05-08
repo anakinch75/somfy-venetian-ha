@@ -106,6 +106,11 @@ automation:
 
 ## Changelog
 
+### v1.0.2
+- Correction mise à jour des états : `get_devices(refresh=True)` pour forcer le rechargement
+- Ajout des mises à jour optimistes : HA reflète immédiatement la commande sans attendre le poll
+- Meilleure gestion des erreurs de commande avec logs détaillés
+
 ### v1.0.1
 - Correction du mapping d'inclinaison : l'API Somfy attend 0–100 (et non -90 à 0)
 

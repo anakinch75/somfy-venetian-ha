@@ -47,12 +47,12 @@ def _ha_position_to_somfy(position: int) -> int:
 
 
 def _somfy_tilt_to_ha(orientation: int) -> int:
-    """Somfy 0=ouvert→100=fermé → HA 100=ouvert→0=fermé"""
+    """Somfy 0=horizontal 100=vertical → HA 100=horizontal 0=vertical"""
     return 100 - int(orientation)
 
 
 def _ha_tilt_to_somfy(tilt: int) -> int:
-    """HA 100=ouvert→0=fermé → Somfy 0=ouvert→100=fermé"""
+    """HA 100=horizontal 0=vertical → Somfy 0=horizontal 100=vertical"""
     return 100 - int(tilt)
 
 
@@ -74,6 +74,15 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
         self._device_url = device_url
         self._attr_unique_id = device_url
         self._attr_name = coordinator.data[device_url].label
+        # état optimiste local (None = utilise la valeur du coordinateur)
+        self._optimistic_position: int | None = None
+        self._optimistic_tilt: int | None = None
+
+    def _handle_coordinator_update(self) -> None:
+        # on efface l'état optimiste dès que le coordinateur retourne une vraie valeur
+        self._optimistic_position = None
+        self._optimistic_tilt = None
+        super()._handle_coordinator_update()
 
     def _get_state(self, name: str):
         device = self.coordinator.data.get(self._device_url)
@@ -86,10 +95,10 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
 
     @property
     def is_closed(self) -> bool | None:
-        closure = self._get_state(STATE_CLOSURE)
-        if closure is None:
+        pos = self.current_cover_position
+        if pos is None:
             return None
-        return int(closure) >= 100
+        return pos == 0
 
     @property
     def is_opening(self) -> bool:
@@ -98,6 +107,8 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
 
     @property
     def current_cover_position(self) -> int | None:
+        if self._optimistic_position is not None:
+            return self._optimistic_position
         closure = self._get_state(STATE_CLOSURE)
         if closure is None:
             return None
@@ -105,6 +116,8 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
 
     @property
     def current_cover_tilt_position(self) -> int | None:
+        if self._optimistic_tilt is not None:
+            return self._optimistic_tilt
         orientation = self._get_state(STATE_ORIENTATION)
         if orientation is None:
             return None
@@ -112,11 +125,13 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
 
     async def async_open_cover(self, **kwargs) -> None:
         await self.coordinator.execute_command(self._device_url, CMD_OPEN)
-        await self.coordinator.async_request_refresh()
+        self._optimistic_position = 100
+        self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs) -> None:
         await self.coordinator.execute_command(self._device_url, CMD_CLOSE)
-        await self.coordinator.async_request_refresh()
+        self._optimistic_position = 0
+        self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs) -> None:
         await self.coordinator.execute_command(self._device_url, CMD_STOP)
@@ -124,15 +139,16 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
 
     async def async_set_cover_position(self, **kwargs) -> None:
         ha_position = kwargs["position"]
-        orientation = self._get_state(STATE_ORIENTATION) or 0
         somfy_closure = _ha_position_to_somfy(ha_position)
+        somfy_orientation = _ha_tilt_to_somfy(self.current_cover_tilt_position or 50)
         await self.coordinator.execute_command(
             self._device_url,
             CMD_SET_CLOSURE_AND_ORIENTATION,
             somfy_closure,
-            int(orientation),
+            somfy_orientation,
         )
-        await self.coordinator.async_request_refresh()
+        self._optimistic_position = ha_position
+        self.async_write_ha_state()
 
     async def async_open_cover_tilt(self, **kwargs) -> None:
         await self.async_set_cover_tilt_position(tilt_position=100)
@@ -142,15 +158,16 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
 
     async def async_set_cover_tilt_position(self, **kwargs) -> None:
         ha_tilt = kwargs["tilt_position"]
-        closure = self._get_state(STATE_CLOSURE) or 0
         somfy_orientation = _ha_tilt_to_somfy(ha_tilt)
+        somfy_closure = _ha_position_to_somfy(self.current_cover_position or 0)
         await self.coordinator.execute_command(
             self._device_url,
             CMD_SET_CLOSURE_AND_ORIENTATION,
-            int(closure),
+            somfy_closure,
             somfy_orientation,
         )
-        await self.coordinator.async_request_refresh()
+        self._optimistic_tilt = ha_tilt
+        self.async_write_ha_state()
 
     async def async_my(self) -> None:
         """Position mémorisée (bouton My de la télécommande)."""

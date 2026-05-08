@@ -46,17 +46,24 @@ class SomfyVenetianCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     async def _async_update_data(self) -> dict[str, Device]:
         try:
             client = await self._get_client()
-            devices = await client.get_devices()
+            # get_devices() retourne les états en cache — on force le refresh
+            devices = await client.get_devices(refresh=True)
             return {
                 d.device_url: d
                 for d in devices
                 if d.ui_class == "ExteriorVenetianBlind"
             }
         except Exception as err:
-            self._client = None  # force reconnect next time
+            self._client = None
             raise UpdateFailed(f"Erreur communication TaHoma: {err}") from err
 
     async def execute_command(self, device_url: str, command: str, *params) -> None:
         from pyoverkiz.models import Command
-        client = await self._get_client()
-        await client.execute_command(device_url, Command(command, list(params)))
+        try:
+            client = await self._get_client()
+            await client.execute_command(device_url, Command(command, list(params)))
+            _LOGGER.debug("Commande %s(%s) envoyée à %s", command, params, device_url)
+        except Exception as err:
+            _LOGGER.error("Échec commande %s sur %s: %s", command, device_url, err)
+            self._client = None
+            raise
