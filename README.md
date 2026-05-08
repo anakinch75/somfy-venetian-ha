@@ -106,6 +106,10 @@ automation:
 
 ## Changelog
 
+### v1.0.3
+- Correction affichage pendant le mouvement : l'état optimiste est conservé tant que le store bouge
+- Suppression du refresh immédiat pendant les commandes de mouvement
+
 ### v1.0.2
 - Correction mise à jour des états : `get_devices(refresh=True)` pour forcer le rechargement
 - Ajout des mises à jour optimistes : HA reflète immédiatement la commande sans attendre le poll

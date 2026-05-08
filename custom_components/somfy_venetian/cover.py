@@ -79,9 +79,11 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
         self._optimistic_tilt: int | None = None
 
     def _handle_coordinator_update(self) -> None:
-        # on efface l'état optimiste dès que le coordinateur retourne une vraie valeur
-        self._optimistic_position = None
-        self._optimistic_tilt = None
+        # on n'efface l'état optimiste que quand le store a fini de bouger
+        moving = self._get_state(STATE_MOVING)
+        if str(moving).lower() != "true":
+            self._optimistic_position = None
+            self._optimistic_tilt = None
         super()._handle_coordinator_update()
 
     def _get_state(self, name: str):
@@ -135,6 +137,8 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
 
     async def async_stop_cover(self, **kwargs) -> None:
         await self.coordinator.execute_command(self._device_url, CMD_STOP)
+        self._optimistic_position = None
+        self._optimistic_tilt = None
         await self.coordinator.async_request_refresh()
 
     async def async_set_cover_position(self, **kwargs) -> None:
