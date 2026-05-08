@@ -4,86 +4,88 @@
 [![Version](https://img.shields.io/github/v/release/anakinch75/somfy-venetian-ha)](https://github.com/anakinch75/somfy-venetian-ha/releases)
 [![Tests](https://github.com/anakinch75/somfy-venetian-ha/actions/workflows/tests.yml/badge.svg)](https://github.com/anakinch75/somfy-venetian-ha/actions/workflows/tests.yml)
 
-Intégration Home Assistant pour les stores à lamelles Somfy via TaHoma Switch, avec contrôle complet de l'inclinaison des lamelles — fonctionnalité absente de l'intégration Overkiz officielle.
+Home Assistant integration for Somfy venetian blinds via TaHoma Switch, with full slat tilt control — a feature missing from the official Overkiz integration.
 
-## Pourquoi cette intégration ?
+---
 
-L'intégration officielle **Overkiz** de Home Assistant ne supporte pas le widget `DynamicExteriorVenetianBlind` et n'expose pas l'état `core:SlateOrientationState`. Cette intégration comble ce manque pour les stores à lamelles io-homecontrol Somfy.
+## Why this integration?
 
-## Fonctionnalités
+The official **Overkiz** integration in Home Assistant does not support the `DynamicExteriorVenetianBlind` widget and does not expose the `core:SlateOrientationState` attribute. This integration fills that gap for Somfy io-homecontrol venetian blinds.
 
-- Contrôle de la position (montée/descente)
-- Contrôle de l'inclinaison des lamelles (`tilt_position`)
-- Commande combinée position + inclinaison (`setClosureAndOrientation`)
-- Bouton Stop
-- Position mémorisée (My)
-- Polling automatique toutes les 30 secondes
+## Features
 
-## Appareils supportés
+- Position control (raise/lower)
+- Slat tilt control (`tilt_position`)
+- Combined position + tilt command (`setClosureAndOrientation`)
+- Stop
+- Memorized position (My button)
+- Real-time state updates via event polling (every 2 seconds)
+
+## Supported devices
 
 - Widget `DynamicExteriorVenetianBlind` / UI Class `ExteriorVenetianBlind`
 - Via TaHoma Switch (io-homecontrol)
-- Testé en Suisse avec compte Somfy Europe
+- Tested in Switzerland with a Somfy Europe account
 
-## Prérequis
+## Requirements
 
 - Home Assistant 2023.1+
-- HACS installé
-- Compte Somfy (mysciosomfy.com)
-- TaHoma Switch connecté et appairé
+- HACS installed
+- Somfy account (mysciosomfy.com)
+- TaHoma Switch connected and paired
 
 ## Installation via HACS
 
-1. Dans HACS → **Intégrations** → menu ⋮ → **Dépôts personnalisés**
-2. URL : `https://github.com/anakinch75/somfy-venetian-ha`
-3. Catégorie : **Intégration**
-4. Cliquez **Ajouter**
-5. Recherchez "Somfy Venetian" et installez
-6. Redémarrez Home Assistant
+1. In HACS → **Integrations** → ⋮ menu → **Custom repositories**
+2. URL: `https://github.com/anakinch75/somfy-venetian-ha`
+3. Category: **Integration**
+4. Click **Add**
+5. Search for "Somfy Venetian" and install
+6. Restart Home Assistant
 
 ## Configuration
 
-1. **Paramètres** → **Appareils et services** → **Ajouter une intégration**
-2. Recherchez **Somfy Venetian Blinds**
-3. Entrez votre email et mot de passe du compte Somfy
-4. Sélectionnez votre région (Europe par défaut)
+1. **Settings** → **Devices & services** → **Add integration**
+2. Search for **Somfy Venetian Blinds**
+3. Enter your Somfy account email and password
+4. Select your region (Europe by default)
 
-## Entités créées
+## Entities
 
-Une entité `cover` par store détecté, nommée d'après le label dans l'app TaHoma.
+One `cover` entity per detected blind, named after the label in the TaHoma app.
 
-| Attribut | Description | Valeurs |
-|----------|-------------|---------|
-| `current_cover_position` | Position du store | 0 = fermé, 100 = ouvert |
-| `current_cover_tilt_position` | Inclinaison des lamelles | 0 = vertical (fermé), 100 = horizontal (ouvert) |
-| `is_closed` | Store fermé ? | booléen |
+| Attribute | Description | Values |
+|-----------|-------------|--------|
+| `current_cover_position` | Blind position | 0 = closed, 100 = open |
+| `current_cover_tilt_position` | Slat tilt angle | 0 = vertical (closed), 100 = horizontal (open) |
+| `is_closed` | Is the blind closed? | boolean |
 
-## Mapping d'inclinaison
+## Tilt mapping
 
-L'API Somfy utilise `core:SlateOrientationState` avec des valeurs 0–100 :
+The Somfy API uses `core:SlateOrientationState` with values 0–100:
 
-| Somfy | HA `tilt_position` | Position physique |
+| Somfy | HA `tilt_position` | Physical position |
 |-------|--------------------|-------------------|
-| 0 | 100 | Lamelles horizontales (max lumière) |
-| 50 | 50 | Lamelles à 45° |
-| 100 | 0 | Lamelles verticales (occultant) |
+| 0 | 100 | Slats horizontal (max light) |
+| 50 | 50 | Slats at 45° |
+| 100 | 0 | Slats vertical (blackout) |
 
-## Services disponibles
+## Available services
 
 | Service | Description |
 |---------|-------------|
-| `cover.open_cover` | Monte le store complètement |
-| `cover.close_cover` | Descend le store complètement |
-| `cover.stop_cover` | Arrête le mouvement |
-| `cover.set_cover_position` | Position précise (0–100) |
-| `cover.set_cover_tilt_position` | Inclinaison précise (0–100) |
+| `cover.open_cover` | Fully raise the blind |
+| `cover.close_cover` | Fully lower the blind |
+| `cover.stop_cover` | Stop movement |
+| `cover.set_cover_position` | Set precise position (0–100) |
+| `cover.set_cover_tilt_position` | Set precise tilt angle (0–100) |
 
-## Exemples d'automatisation
+## Automation examples
 
 ```yaml
-# Lamelles à 45° le matin
+# Open slats at 45° every morning
 automation:
-  - alias: "Stores matin"
+  - alias: "Morning blinds"
     trigger:
       platform: time
       at: "07:30:00"
@@ -94,59 +96,60 @@ automation:
         data:
           tilt_position: 50
 
-# Fermeture complète le soir
-  - alias: "Stores soir"
+# Close all blinds at sunset
+  - alias: "Evening blinds"
     trigger:
       platform: sun
       event: sunset
     action:
       - service: cover.close_cover
         target:
-          area_id: salon
+          area_id: living_room
 ```
+
+---
 
 ## Changelog
 
+### v1.0.10
+- Added Somfy brand icon (shown in HACS and HA integration page)
+
 ### v1.0.9
-- Page d'intégration HA améliorée : titre "Somfy TaHoma Switch" au lieu de l'email
-- Les 8 stores regroupés sous un appareil "TaHoma Switch" dans HA
-- Version manifest mise à jour
+- Cleaner integration page: title "Somfy TaHoma Switch" instead of email address
+- All blinds grouped under a single "TaHoma Switch" device in HA
 
 ### v1.0.8
-- Ajout de 29 tests unitaires (mappings, pending state, commandes combinées)
-- GitHub Actions : tests lancés automatiquement à chaque push
-- Badge de statut des tests dans le README
+- Added 29 unit tests (mappings, pending state, combined commands)
+- GitHub Actions: tests run automatically on every push
+- Test status badge in README
 
 ### v1.0.7
-- Correction fuite de session réseau au redémarrage/reconnexion
-- Annulation propre de la boucle événementielle au déchargement de l'intégration
-- Verrou contre la double-connexion simultanée
-- `open`/`close` affichent maintenant la position cible pendant le mouvement
-- `stop` vide immédiatement le pending pour afficher la vraie position
-- `is_opening`/`is_closing` correctement implémentés (animation HA correcte)
+- Fixed aiohttp session leak on reconnection
+- Event loop properly cancelled on integration unload
+- Lock against concurrent double-connection
+- `open`/`close` now show target position during movement
+- `stop` immediately clears pending state
+- `is_opening`/`is_closing` correctly implemented
 
 ### v1.0.6
-- Correction définitive de l'effet de recalage en fin de mouvement : le slider affiche la valeur cible pendant tout le déplacement, et bascule sur la valeur réelle uniquement une fois le store arrêté
+- Fixed end-of-movement slider jump: shows target value during movement, switches to real value when stopped
 
 ### v1.0.5
-- Correction commandes combinées position+inclinaison : les valeurs en attente sont mémorisées pour éviter les conflits entre commandes rapprochées
+- Fixed combined position+tilt commands: pending values prevent conflicts between rapid successive commands
 
 ### v1.0.4
-- Refactoring majeur : remplacement du polling par une boucle événementielle (`fetch_events()` toutes les 2s)
-- Les états se mettent à jour en temps réel pendant le mouvement des stores
-- Suppression de tout état optimiste — le code est maintenant propre et simple
+- Major refactor: replaced polling with real-time event loop (`fetch_events()` every 2s)
+- States update in real time during blind movement
 
 ### v1.0.3
-- Correction affichage pendant le mouvement : l'état optimiste est conservé tant que le store bouge
-- Suppression du refresh immédiat pendant les commandes de mouvement
+- Fixed slider bouncing back during movement
 
 ### v1.0.2
-- Correction mise à jour des états : `get_devices(refresh=True)` pour forcer le rechargement
-- Ajout des mises à jour optimistes : HA reflète immédiatement la commande sans attendre le poll
-- Meilleure gestion des erreurs de commande avec logs détaillés
+- Fixed state not updating: `get_devices(refresh=True)`
+- Added optimistic state updates
 
 ### v1.0.1
-- Correction du mapping d'inclinaison : l'API Somfy attend 0–100 (et non -90 à 0)
+- Fixed tilt mapping: Somfy API expects 0–100 (not -90 to 0)
 
 ### v1.0.0
-- Version initiale : position + inclinaison des lamelles
+- Initial release: position + slat tilt control
