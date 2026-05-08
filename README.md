@@ -107,6 +107,11 @@ automation:
 
 ## Changelog
 
+### v1.0.9
+- Page d'intégration HA améliorée : titre "Somfy TaHoma Switch" au lieu de l'email
+- Les 8 stores regroupés sous un appareil "TaHoma Switch" dans HA
+- Version manifest mise à jour
+
 ### v1.0.8
 - Ajout de 29 tests unitaires (mappings, pending state, commandes combinées)
 - GitHub Actions : tests lancés automatiquement à chaque push

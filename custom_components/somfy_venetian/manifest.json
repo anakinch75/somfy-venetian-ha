@@ -1,7 +1,7 @@
 {
   "domain": "somfy_venetian",
   "name": "Somfy Venetian Blinds",
-  "version": "1.0.0",
+  "version": "1.0.8",
   "documentation": "https://github.com/bertrandfournier/somfy-venetian-ha",
   "requirements": ["pyoverkiz>=1.20.0"],
   "dependencies": [],

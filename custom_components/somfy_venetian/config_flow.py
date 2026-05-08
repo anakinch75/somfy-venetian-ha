@@ -45,7 +45,7 @@ class SomfyVenetianConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=f"Somfy ({user_input[CONF_USERNAME]})",
+                    title="Somfy TaHoma Switch",
                     data=user_input,
                 )
             except Exception:

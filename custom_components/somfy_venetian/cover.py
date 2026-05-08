@@ -7,6 +7,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -77,6 +78,12 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
         self._attr_name = coordinator.data[device_url].label
         self._pending_position: int | None = None
         self._pending_tilt: int | None = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(coordinator.config_entry.entry_id,)},
+            name="TaHoma Switch",
+            manufacturer="Somfy",
+            model="TaHoma Switch",
+        )
 
     def _handle_coordinator_update(self) -> None:
         # vide le pending uniquement quand le store est arrêté
