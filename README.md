@@ -2,6 +2,7 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 [![Version](https://img.shields.io/github/v/release/anakinch75/somfy-venetian-ha)](https://github.com/anakinch75/somfy-venetian-ha/releases)
+[![Tests](https://github.com/anakinch75/somfy-venetian-ha/actions/workflows/tests.yml/badge.svg)](https://github.com/anakinch75/somfy-venetian-ha/actions/workflows/tests.yml)
 
 Intégration Home Assistant pour les stores à lamelles Somfy via TaHoma Switch, avec contrôle complet de l'inclinaison des lamelles — fonctionnalité absente de l'intégration Overkiz officielle.
 
@@ -105,6 +106,11 @@ automation:
 ```
 
 ## Changelog
+
+### v1.0.8
+- Ajout de 29 tests unitaires (mappings, pending state, commandes combinées)
+- GitHub Actions : tests lancés automatiquement à chaque push
+- Badge de statut des tests dans le README
 
 ### v1.0.7
 - Correction fuite de session réseau au redémarrage/reconnexion

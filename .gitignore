@@ -1,4 +1,8 @@
 explore_tahoma.py
+debug_store.py
 __pycache__/
 *.pyc
 .DS_Store
+.pytest_cache/
+.coverage
+htmlcov/

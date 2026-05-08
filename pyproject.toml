@@ -1,0 +1,10 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["custom_components/somfy_venetian"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+show_missing = true
