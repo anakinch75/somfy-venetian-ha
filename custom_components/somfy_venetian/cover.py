@@ -19,6 +19,7 @@ from .const import (
     DOMAIN,
     STATE_CLOSURE,
     STATE_MOVING,
+    STATE_OPEN_CLOSED,
     STATE_ORIENTATION,
 )
 from .coordinator import SomfyVenetianCoordinator
@@ -74,11 +75,11 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
         self._device_url = device_url
         self._attr_unique_id = device_url
         self._attr_name = coordinator.data[device_url].label
-        # valeurs en attente — utilisées uniquement pour construire les commandes combinées
         self._pending_position: int | None = None
         self._pending_tilt: int | None = None
 
     def _handle_coordinator_update(self) -> None:
+        # vide le pending uniquement quand le store est arrêté
         if str(self._get_state(STATE_MOVING)).lower() != "true":
             self._pending_position = None
             self._pending_tilt = None
@@ -96,12 +97,18 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
     @property
     def is_closed(self) -> bool | None:
         pos = self.current_cover_position
-        if pos is None:
-            return None
-        return pos == 0
+        return None if pos is None else pos == 0
 
     @property
     def is_opening(self) -> bool:
+        return str(self._get_state(STATE_OPEN_CLOSED)).lower() == "open" and self._is_moving
+
+    @property
+    def is_closing(self) -> bool:
+        return str(self._get_state(STATE_OPEN_CLOSED)).lower() == "closed" and self._is_moving
+
+    @property
+    def _is_moving(self) -> bool:
         return str(self._get_state(STATE_MOVING)).lower() == "true"
 
     @property
@@ -118,32 +125,36 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
         orientation = self._get_state(STATE_ORIENTATION)
         return None if orientation is None else _somfy_tilt_to_ha(orientation)
 
-    async def async_open_cover(self, **kwargs) -> None:
-        await self.coordinator.execute_command(self._device_url, CMD_OPEN)
-
-    async def async_close_cover(self, **kwargs) -> None:
-        await self.coordinator.execute_command(self._device_url, CMD_CLOSE)
-
-    async def async_stop_cover(self, **kwargs) -> None:
-        await self.coordinator.execute_command(self._device_url, CMD_STOP)
-
     def _effective_position(self) -> int:
-        """Position à utiliser pour construire une commande combinée."""
         return self._pending_position if self._pending_position is not None else (self.current_cover_position or 0)
 
     def _effective_tilt(self) -> int:
-        """Tilt à utiliser pour construire une commande combinée."""
         return self._pending_tilt if self._pending_tilt is not None else (self.current_cover_tilt_position or 50)
 
+    async def async_open_cover(self, **kwargs) -> None:
+        self._pending_position = 100
+        await self.coordinator.execute_command(self._device_url, CMD_OPEN)
+        self.async_write_ha_state()
+
+    async def async_close_cover(self, **kwargs) -> None:
+        self._pending_position = 0
+        await self.coordinator.execute_command(self._device_url, CMD_CLOSE)
+        self.async_write_ha_state()
+
+    async def async_stop_cover(self, **kwargs) -> None:
+        self._pending_position = None
+        self._pending_tilt = None
+        await self.coordinator.execute_command(self._device_url, CMD_STOP)
+
     async def async_set_cover_position(self, **kwargs) -> None:
-        ha_position = kwargs["position"]
-        self._pending_position = ha_position
+        self._pending_position = kwargs["position"]
         await self.coordinator.execute_command(
             self._device_url,
             CMD_SET_CLOSURE_AND_ORIENTATION,
-            _ha_position_to_somfy(ha_position),
+            _ha_position_to_somfy(self._pending_position),
             _ha_tilt_to_somfy(self._effective_tilt()),
         )
+        self.async_write_ha_state()
 
     async def async_open_cover_tilt(self, **kwargs) -> None:
         await self.async_set_cover_tilt_position(tilt_position=100)
@@ -152,15 +163,17 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
         await self.async_set_cover_tilt_position(tilt_position=0)
 
     async def async_set_cover_tilt_position(self, **kwargs) -> None:
-        ha_tilt = kwargs["tilt_position"]
-        self._pending_tilt = ha_tilt
+        self._pending_tilt = kwargs["tilt_position"]
         await self.coordinator.execute_command(
             self._device_url,
             CMD_SET_CLOSURE_AND_ORIENTATION,
             _ha_position_to_somfy(self._effective_position()),
-            _ha_tilt_to_somfy(ha_tilt),
+            _ha_tilt_to_somfy(self._pending_tilt),
         )
+        self.async_write_ha_state()
 
     async def async_my(self) -> None:
         """Position mémorisée (bouton My de la télécommande)."""
+        self._pending_position = None
+        self._pending_tilt = None
         await self.coordinator.execute_command(self._device_url, CMD_MY)

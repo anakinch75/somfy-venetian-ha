@@ -5,7 +5,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_SERVER, DEFAULT_SERVER, DOMAIN, PLATFORMS
-from .coordinator import SomfyVenetianCoordinator
+from .coordinator import SomfyVenetianCoordinator  # noqa: F401
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -22,7 +22,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    coordinator: SomfyVenetianCoordinator = hass.data[DOMAIN][entry.entry_id]
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
+        await coordinator.async_shutdown()
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok

@@ -106,6 +106,14 @@ automation:
 
 ## Changelog
 
+### v1.0.7
+- Correction fuite de session réseau au redémarrage/reconnexion
+- Annulation propre de la boucle événementielle au déchargement de l'intégration
+- Verrou contre la double-connexion simultanée
+- `open`/`close` affichent maintenant la position cible pendant le mouvement
+- `stop` vide immédiatement le pending pour afficher la vraie position
+- `is_opening`/`is_closing` correctement implémentés (animation HA correcte)
+
 ### v1.0.6
 - Correction définitive de l'effet de recalage en fin de mouvement : le slider affiche la valeur cible pendant tout le déplacement, et bascule sur la valeur réelle uniquement une fois le store arrêté
 
