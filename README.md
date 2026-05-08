@@ -106,6 +106,9 @@ automation:
 
 ## Changelog
 
+### v1.0.5
+- Correction commandes combinées position+inclinaison : les valeurs en attente sont mémorisées pour éviter les conflits entre commandes rapprochées
+
 ### v1.0.4
 - Refactoring majeur : remplacement du polling par une boucle événementielle (`fetch_events()` toutes les 2s)
 - Les états se mettent à jour en temps réel pendant le mouvement des stores

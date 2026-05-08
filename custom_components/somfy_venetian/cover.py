@@ -74,6 +74,14 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
         self._device_url = device_url
         self._attr_unique_id = device_url
         self._attr_name = coordinator.data[device_url].label
+        # valeurs en attente — utilisées uniquement pour construire les commandes combinées
+        self._pending_position: int | None = None
+        self._pending_tilt: int | None = None
+
+    def _handle_coordinator_update(self) -> None:
+        self._pending_position = None
+        self._pending_tilt = None
+        super()._handle_coordinator_update()
 
     def _get_state(self, name: str):
         device = self.coordinator.data.get(self._device_url)
@@ -114,14 +122,22 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
     async def async_stop_cover(self, **kwargs) -> None:
         await self.coordinator.execute_command(self._device_url, CMD_STOP)
 
+    def _effective_position(self) -> int:
+        """Position à utiliser pour construire une commande combinée."""
+        return self._pending_position if self._pending_position is not None else (self.current_cover_position or 0)
+
+    def _effective_tilt(self) -> int:
+        """Tilt à utiliser pour construire une commande combinée."""
+        return self._pending_tilt if self._pending_tilt is not None else (self.current_cover_tilt_position or 50)
+
     async def async_set_cover_position(self, **kwargs) -> None:
         ha_position = kwargs["position"]
-        somfy_orientation = _ha_tilt_to_somfy(self.current_cover_tilt_position or 50)
+        self._pending_position = ha_position
         await self.coordinator.execute_command(
             self._device_url,
             CMD_SET_CLOSURE_AND_ORIENTATION,
             _ha_position_to_somfy(ha_position),
-            somfy_orientation,
+            _ha_tilt_to_somfy(self._effective_tilt()),
         )
 
     async def async_open_cover_tilt(self, **kwargs) -> None:
@@ -132,11 +148,11 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
 
     async def async_set_cover_tilt_position(self, **kwargs) -> None:
         ha_tilt = kwargs["tilt_position"]
-        somfy_closure = _ha_position_to_somfy(self.current_cover_position or 0)
+        self._pending_tilt = ha_tilt
         await self.coordinator.execute_command(
             self._device_url,
             CMD_SET_CLOSURE_AND_ORIENTATION,
-            somfy_closure,
+            _ha_position_to_somfy(self._effective_position()),
             _ha_tilt_to_somfy(ha_tilt),
         )
 
