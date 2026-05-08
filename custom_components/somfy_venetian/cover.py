@@ -74,17 +74,6 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
         self._device_url = device_url
         self._attr_unique_id = device_url
         self._attr_name = coordinator.data[device_url].label
-        # état optimiste local (None = utilise la valeur du coordinateur)
-        self._optimistic_position: int | None = None
-        self._optimistic_tilt: int | None = None
-
-    def _handle_coordinator_update(self) -> None:
-        # on n'efface l'état optimiste que quand le store a fini de bouger
-        moving = self._get_state(STATE_MOVING)
-        if str(moving).lower() != "true":
-            self._optimistic_position = None
-            self._optimistic_tilt = None
-        super()._handle_coordinator_update()
 
     def _get_state(self, name: str):
         device = self.coordinator.data.get(self._device_url)
@@ -104,55 +93,36 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
 
     @property
     def is_opening(self) -> bool:
-        moving = self._get_state(STATE_MOVING)
-        return str(moving).lower() == "true"
+        return str(self._get_state(STATE_MOVING)).lower() == "true"
 
     @property
     def current_cover_position(self) -> int | None:
-        if self._optimistic_position is not None:
-            return self._optimistic_position
         closure = self._get_state(STATE_CLOSURE)
-        if closure is None:
-            return None
-        return _somfy_closure_to_ha(closure)
+        return None if closure is None else _somfy_closure_to_ha(closure)
 
     @property
     def current_cover_tilt_position(self) -> int | None:
-        if self._optimistic_tilt is not None:
-            return self._optimistic_tilt
         orientation = self._get_state(STATE_ORIENTATION)
-        if orientation is None:
-            return None
-        return _somfy_tilt_to_ha(orientation)
+        return None if orientation is None else _somfy_tilt_to_ha(orientation)
 
     async def async_open_cover(self, **kwargs) -> None:
         await self.coordinator.execute_command(self._device_url, CMD_OPEN)
-        self._optimistic_position = 100
-        self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs) -> None:
         await self.coordinator.execute_command(self._device_url, CMD_CLOSE)
-        self._optimistic_position = 0
-        self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs) -> None:
         await self.coordinator.execute_command(self._device_url, CMD_STOP)
-        self._optimistic_position = None
-        self._optimistic_tilt = None
-        await self.coordinator.async_request_refresh()
 
     async def async_set_cover_position(self, **kwargs) -> None:
         ha_position = kwargs["position"]
-        somfy_closure = _ha_position_to_somfy(ha_position)
         somfy_orientation = _ha_tilt_to_somfy(self.current_cover_tilt_position or 50)
         await self.coordinator.execute_command(
             self._device_url,
             CMD_SET_CLOSURE_AND_ORIENTATION,
-            somfy_closure,
+            _ha_position_to_somfy(ha_position),
             somfy_orientation,
         )
-        self._optimistic_position = ha_position
-        self.async_write_ha_state()
 
     async def async_open_cover_tilt(self, **kwargs) -> None:
         await self.async_set_cover_tilt_position(tilt_position=100)
@@ -162,18 +132,14 @@ class SomfyVenetianBlind(CoordinatorEntity[SomfyVenetianCoordinator], CoverEntit
 
     async def async_set_cover_tilt_position(self, **kwargs) -> None:
         ha_tilt = kwargs["tilt_position"]
-        somfy_orientation = _ha_tilt_to_somfy(ha_tilt)
         somfy_closure = _ha_position_to_somfy(self.current_cover_position or 0)
         await self.coordinator.execute_command(
             self._device_url,
             CMD_SET_CLOSURE_AND_ORIENTATION,
             somfy_closure,
-            somfy_orientation,
+            _ha_tilt_to_somfy(ha_tilt),
         )
-        self._optimistic_tilt = ha_tilt
-        self.async_write_ha_state()
 
     async def async_my(self) -> None:
         """Position mémorisée (bouton My de la télécommande)."""
         await self.coordinator.execute_command(self._device_url, CMD_MY)
-        await self.coordinator.async_request_refresh()

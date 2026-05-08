@@ -106,6 +106,11 @@ automation:
 
 ## Changelog
 
+### v1.0.4
+- Refactoring majeur : remplacement du polling par une boucle événementielle (`fetch_events()` toutes les 2s)
+- Les états se mettent à jour en temps réel pendant le mouvement des stores
+- Suppression de tout état optimiste — le code est maintenant propre et simple
+
 ### v1.0.3
 - Correction affichage pendant le mouvement : l'état optimiste est conservé tant que le store bouge
 - Suppression du refresh immédiat pendant les commandes de mouvement
